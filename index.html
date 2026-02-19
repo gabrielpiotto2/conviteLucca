@@ -174,16 +174,43 @@
       );
     }
 
+    function InstagramIcon({ className }) {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+        </svg>
+      );
+    }
+
     function App() {
       const [introFinished, setIntroFinished] = useState(false);
       const [showInvite, setShowInvite] = useState(false);
       const [isDrinking, setIsDrinking] = useState(false);
+      const [imgIndex, setImgIndex] = useState(0);
       const audioRef = useRef(null);
+
+      useEffect(() => {
+        if (!showInvite) return;
+
+        let interval;
+        const timeout = setTimeout(() => {
+          setImgIndex((prev) => (prev + 1) % 3);
+          interval = setInterval(() => {
+            setImgIndex((prev) => (prev + 1) % 3);
+          }, 5000);
+        }, 10000);
+
+        return () => {
+          clearTimeout(timeout);
+          if (interval) clearInterval(interval);
+        };
+      }, [showInvite]);
 
       const handleBeerClick = () => {
         if (!isDrinking && !introFinished) {
 
-          // Tenta tocar o áudio imediatamente após o clique (interação do usuário)
           if (audioRef.current) {
             audioRef.current.volume = 1.0;
             const playPromise = audioRef.current.play();
@@ -191,14 +218,12 @@
             if (playPromise !== undefined) {
               playPromise.catch(error => {
                 console.error("Erro ao tentar tocar o áudio:", error);
-                // Fallback: tenta tocar novamente ou avisa o usuário (opcional)
               });
             }
           }
 
           setIsDrinking(true);
 
-          // 3 segundos de animação da cerveja + 500ms de delay para transição
           setTimeout(() => {
             setIntroFinished(true);
             setTimeout(() => setShowInvite(true), 500);
@@ -206,21 +231,19 @@
         }
       };
 
-      // Dados do evento
       const eventDetails = {
         date: "14/03/2026",
         time: "18:00",
         location: "Rua do Sacramento, 113 - Rudge Ramos/SBC",
-        wppLink: "https://wa.me/5511976286119"
+        wppLink: "https://wa.me/5511976286119",
+        instaLink: "https://www.instagram.com/villaberno/"
       };
 
       return (
         <main className="min-h-dvh relative bg-black overflow-hidden font-sans">
 
-          {/* Elemento de Áudio Oculto (sem controles) */}
           <audio ref={audioRef} src="./assets/musica.mp3" loop preload="auto"></audio>
 
-          {/* --- TELA DE INTRODUÇÃO (BAR + CERVEJA) --- */}
           <div
             className={`
               fixed inset-0 z-50 flex flex-col items-center justify-center p-6 h-dvh w-screen
@@ -228,7 +251,6 @@
               ${introFinished ? 'opacity-0 scale-110 pointer-events-none' : 'opacity-100 scale-100'}
             `}
           >
-            {/* Fundo do Bar e Overlay */}
             <div className="absolute inset-0 z-0 select-none">
               <img
                 src="./assets/bar.jpeg"
@@ -238,7 +260,6 @@
               <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black/90"></div>
             </div>
 
-            {/* Conteúdo Centralizado */}
             <div className="relative z-10 flex flex-col items-center text-center w-full max-w-sm">
               <h1 className="font-script text-5xl md:text-7xl text-amber-400 mb-8 md:mb-12 drop-shadow-lg animate-fade-in-down px-4 leading-tight">
                 Vamos brindar?
@@ -261,8 +282,6 @@
             </div>
           </div>
 
-
-          {/* --- CONVITE PRINCIPAL (Aparece depois) --- */}
           <div
             className={`
               min-h-dvh flex justify-center items-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-800 via-zinc-950 to-black p-4 relative w-full
@@ -270,8 +289,6 @@
               ${showInvite ? 'opacity-100 translate-y-0 filter-none' : 'opacity-0 translate-y-20 blur-sm'}
             `}
           >
-
-            {/* Efeitos de fundo do convite */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
               <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-600/20 rounded-full blur-[120px]"></div>
               <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-pink-600/10 rounded-full blur-[120px]"></div>
@@ -279,15 +296,25 @@
 
             <div className="w-full max-w-[380px] bg-zinc-900/90 backdrop-blur-2xl rounded-[32px] shadow-2xl overflow-hidden border border-zinc-800/50 z-10 relative">
 
-              {/* Imagem de Capa do Convite */}
               <div className="relative h-[20rem] md:h-[22rem] overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-900 z-10"></div>
-                <img
-                  src="./assets/convite.png"
-                  alt="Banner de Aniversário"
-                  className="w-full h-full object-cover transform transition-transform duration-[3000ms]"
-                  style={{ transform: showInvite ? 'scale(1.05)' : 'scale(1)' }}
-                />
+
+                {/* Imagens do Carrossel */}
+                {[
+                  "./assets/convite.png",
+                  "./assets/img1.jpeg",
+                  "./assets/img2.jpeg"
+                ].map((src, index) => (
+                  <img
+                    key={index}
+                    src={src}
+                    alt={`Banner ${index}`}
+                    className={`
+                      absolute inset-0 w-full h-full object-cover transform transition-all duration-[2000ms] ease-in-out
+                      ${imgIndex === index ? 'opacity-100 scale-105' : 'opacity-0 scale-100'}
+                    `}
+                  />
+                ))}
 
                 <div className="absolute bottom-5 left-0 w-full px-6 z-20 text-center">
                   <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-xl text-shadow-glow">
@@ -296,8 +323,8 @@
                 </div>
               </div>
 
-              {/* Detalhes do Convite */}
               <div className="px-5 pb-8 pt-4 relative z-20 -mt-2">
+
                 <div className="text-center mb-6">
                   <p className="text-zinc-300 leading-relaxed text-sm md:text-base">
                     Sua presença é essencial para tornar esse dia ainda mais especial!
@@ -325,15 +352,62 @@
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 p-3 rounded-xl bg-zinc-950/40 border border-zinc-800/50 hover:border-purple-500/30 transition-colors">
-                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                  {/* Link do Maps */}
+                  <a
+                    href="https://maps.app.goo.gl/3sKgif6YN2oS4QNH8"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 p-3 rounded-xl bg-zinc-950/40 border border-zinc-800/50 hover:border-blue-500/30 transition-colors group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0 group-hover:bg-blue-500/20 transition-colors">
                       <MapPinIcon className="w-5 h-5" />
                     </div>
-                    <div>
-                      <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Local</p>
-                      <p className="text-zinc-200 font-medium text-sm md:text-base">{eventDetails.location}</p>
+                    <div className="flex-1">
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Endereço</p>
+                      <p className="text-zinc-200 font-medium text-sm md:text-base group-hover:underline decoration-zinc-500 underline-offset-4">{eventDetails.location}</p>
                     </div>
-                  </div>
+                    <div className="opacity-50 group-hover:opacity-100 transition-opacity text-zinc-400 group-hover:text-blue-400">
+                      <ArrowRightIcon className="w-4 h-4" />
+                    </div>
+                  </a>
+
+                  {/* Link do Instagram */}
+                  <a
+                    href={eventDetails.instaLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 p-3 rounded-xl bg-zinc-950/40 border border-zinc-800/50 hover:border-indigo-500/30 transition-colors group"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0 group-hover:bg-indigo-500/20 transition-colors">
+                      <InstagramIcon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Conheça o Local</p>
+                      <p className="text-zinc-200 font-medium text-sm md:text-base">@villaberno</p>
+                    </div>
+                    <div className="opacity-50 group-hover:opacity-100 transition-opacity text-zinc-400 group-hover:text-indigo-400">
+                      <ArrowRightIcon className="w-4 h-4" />
+                    </div>
+                  </a>
+
+                  {/* Botão de WhatsApp */}
+                  <a
+                    href={eventDetails.wppLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="
+                      mt-6 w-full group relative flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl 
+                      bg-white text-black font-bold text-base md:text-lg
+                      shadow-[0_0_20px_rgba(255,255,255,0.2)] 
+                      hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] active:scale-95
+                      transition-all duration-300
+                    "
+                  >
+                    <span className="relative z-10 flex items-center gap-2">
+                      Confirmar Presença <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-200 to-pink-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"></div>
+                  </a>
                 </div>
               </div>
             </div>
